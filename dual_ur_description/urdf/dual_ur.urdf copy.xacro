@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<robot xmlns:xacro="http://wiki.ros.org/xacro" name="name">
+<robot xmlns:xacro="http://wiki.ros.org/xacro" name="ur">
    <!-- robot name parameter -->
    <xacro:arg name="name" default="ur"/>
    <!-- import main macro -->
@@ -9,8 +9,8 @@
    <!-- the default value should raise an error in case this was called without defining the type -->
    <xacro:arg name="ur_type" default="ur5"/>
 
+
    <!-- parameters -->
-   <xacro:arg name="tf_prefix" default="" />
    <xacro:arg name="joint_limit_params" default="$(find dual_ur_description)/config/$(arg ur_type)/joint_limits.yaml"/>
    <xacro:arg name="kinematics_params" default="$(find dual_ur_description)/config/$(arg ur_type)/default_kinematics.yaml"/>
    <xacro:arg name="physical_params" default="$(find dual_ur_description)/config/$(arg ur_type)/physical_parameters.yaml"/>
@@ -26,7 +26,11 @@
    <xacro:arg name="output_recipe_filename" default=""/>
    <xacro:arg name="input_recipe_filename" default=""/>
    <xacro:arg name="reverse_ip" default="0.0.0.0"/>
-   <xacro:arg name="script_command_port" default="50004"/>
+   <xacro:arg name="script_command_port" default="50005"/>
+   <xacro:arg name="trajectory_port" default="50004"/>
+   <xacro:arg name="reverse_port" default="50001"/>
+   <xacro:arg name="script_sender_port" default="50002"/>
+
    <!--   tool communication related parameters-->
    <xacro:arg name="use_tool_communication" default="false" />
    <xacro:arg name="tool_voltage" default="0" />
@@ -52,13 +56,43 @@
    <xacro:property name="initial_positions_file" default="$(arg initial_positions_file)"/>
 
    <!-- create link fixed to the "world" -->
-   <link name="world" />
+   <!-- <link name="world" /> -->
 
-   <!-- arm -->
+   <!-- import dual_base -->
+   <link name="dual_base">
+    <visual>
+      <origin
+        xyz="0 0.26 0"
+        rpy="0 0 ${pi}" />
+      <geometry>
+        <mesh
+          filename="package://dual_ur_description/meshes/arm_base.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.6 0.6 0.6 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0.26 0"
+        rpy="0 0 ${pi}" />
+      <geometry>
+        <mesh
+          filename="package://dual_ur_description/meshes/arm_base.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <link name="arm_0_base_link_z"/>
+  <link name="arm_1_base_link_z"/>
+
+
    <xacro:ur_robot
-     name="$(arg name)"
-     tf_prefix="$(arg tf_prefix)"
-     parent="world"
+     name="arm_0"
+     tf_prefix="arm_0/"
+     parent="arm_0_base_link_z"
      joint_limits_parameters_file="$(arg joint_limit_params)"
      kinematics_parameters_file="$(arg kinematics_params)"
      physical_parameters_file="$(arg physical_params)"
@@ -82,18 +116,89 @@
      tool_tx_idle_chars="$(arg tool_tx_idle_chars)"
      tool_device_name="$(arg tool_device_name)"
      tool_tcp_port="$(arg tool_tcp_port)"
-     robot_ip="$(arg robot_ip)"
+     robot_ip="192.168.56.3"
      script_filename="$(arg script_filename)"
      output_recipe_filename="$(arg output_recipe_filename)"
      input_recipe_filename="$(arg input_recipe_filename)"
      reverse_ip="$(arg reverse_ip)"
-     script_command_port="$(arg script_command_port)"
+     script_command_port="$(arg reverse_ip)"
      trajectory_port="$(arg trajectory_port)"
      reverse_port="$(arg reverse_port)"
      script_sender_port="$(arg script_sender_port)"
+     non_blocking_read="true"
+     keep_alive_count="10"
      >
-     <origin xyz="0 0 0" rpy="0 0 0" />          <!-- position robot in the world -->
+     <origin xyz="0 0 0" rpy="0 0 0" />          
    </xacro:ur_robot>
+
+   <xacro:ur_robot
+     name="arm_1"
+     tf_prefix="arm_1/"
+     parent="arm_1_base_link_z"
+     joint_limits_parameters_file="$(arg joint_limit_params)"
+     kinematics_parameters_file="$(arg kinematics_params)"
+     physical_parameters_file="$(arg physical_params)"
+     visual_parameters_file="$(arg visual_params)"
+     transmission_hw_interface="$(arg transmission_hw_interface)"
+     safety_limits="$(arg safety_limits)"
+     safety_pos_margin="$(arg safety_pos_margin)"
+     safety_k_position="$(arg safety_k_position)"
+     use_mock_hardware="$(arg use_mock_hardware)"
+     mock_sensor_commands="$(arg mock_sensor_commands)"
+     sim_gazebo="$(arg sim_gazebo)"
+     sim_ignition="$(arg sim_ignition)"
+     headless_mode="$(arg headless_mode)"
+     initial_positions="${xacro.load_yaml(initial_positions_file)}"
+     use_tool_communication="$(arg use_tool_communication)"
+     tool_voltage="$(arg tool_voltage)"
+     tool_parity="$(arg tool_parity)"
+     tool_baud_rate="$(arg tool_baud_rate)"
+     tool_stop_bits="$(arg tool_stop_bits)"
+     tool_rx_idle_chars="$(arg tool_rx_idle_chars)"
+     tool_tx_idle_chars="$(arg tool_tx_idle_chars)"
+     tool_device_name="$(arg tool_device_name)"
+     tool_tcp_port="$(arg tool_tcp_port)"
+     robot_ip="192.168.56.101"
+     script_filename="$(arg script_filename)"
+     output_recipe_filename="$(arg output_recipe_filename)"
+     input_recipe_filename="$(arg input_recipe_filename)"
+     reverse_ip="$(arg reverse_ip)"
+     script_command_port="$(arg reverse_ip)"
+     trajectory_port="$(arg trajectory_port)"
+     reverse_port="$(arg reverse_port)"
+     script_sender_port="$(arg script_sender_port)"
+     non_blocking_read="true"
+     keep_alive_count="10"
+     >
+     <origin xyz="0 0 0" rpy="0 0 0" />        
+   </xacro:ur_robot>
+
+   <!-- setup joints -->
+
+  <!-- joint between dual_base and arm -->
+  <joint name="dual_base-arm_0_base_link_z" type="fixed">
+    <parent link="dual_base" />
+    <child link="arm_0_base_link_z" />
+    <origin xyz="0 -0.26 0" rpy="${pi/2} 0 0" />
+  </joint>
+
+  <joint name="arm_0_base_link_z-joint_0" type="fixed">
+    <parent link="arm_0_base_link_z" />
+    <child link="arm_0_base_link" />
+    <origin xyz="0 0 0" rpy="0 0 ${-3*pi/4}" />
+  </joint>
+
+  <joint name="dual_base-arm_1_base_link_z" type="fixed">
+    <parent link="dual_base" />
+    <child link="arm_1_base_link_z" />
+    <origin xyz="0 0.26 0" rpy="${-pi/2} 0 0" />
+  </joint>
+
+  <joint name="arm_1_base_link_z-joint_1" type="fixed">
+    <parent link="arm_1_base_link_z" />
+    <child link="arm_1_base_link" />
+    <origin xyz="0 0 0" rpy="0 0 ${-3*pi/4}" />
+  </joint>
 
    <xacro:if value="$(arg sim_gazebo)">
     <!-- Gazebo plugins -->

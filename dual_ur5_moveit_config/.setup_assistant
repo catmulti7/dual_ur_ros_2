@@ -1,0 +1,30 @@
+moveit_setup_assistant_config:
+  urdf:
+    package: dual_ur_description
+    relative_path: urdf/dual_ur.urdf.xacro
+    xacro_args: ur_type:=ur5
+  srdf:
+    relative_path: config/ur.srdf
+  package_settings:
+    author_name: Linjie Li
+    author_email: catmultiply7@gmail.com
+    generated_timestamp: 1696649583
+  control_xacro:
+    command:
+      - position
+      - velocity
+    state:
+      - position
+      - velocity
+      - effort
+  modified_urdf:
+    xacros:
+      - control_xacro
+  control_xacro:
+    command:
+      - position
+      - velocity
+    state:
+      - position
+      - velocity
+      - effort

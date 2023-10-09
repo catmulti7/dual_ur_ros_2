@@ -1,0 +1,15 @@
+# Default initial positions for ur's ros2_control fake system
+
+initial_positions:
+  arm_0_elbow_joint: 0
+  arm_0_shoulder_lift_joint: 0
+  arm_0_shoulder_pan_joint: 0
+  arm_0_wrist_1_joint: 0
+  arm_0_wrist_2_joint: 0
+  arm_0_wrist_3_joint: 0
+  arm_1_elbow_joint: 0
+  arm_1_shoulder_lift_joint: 0
+  arm_1_shoulder_pan_joint: 0
+  arm_1_wrist_1_joint: 0
+  arm_1_wrist_2_joint: 0
+  arm_1_wrist_3_joint: 0

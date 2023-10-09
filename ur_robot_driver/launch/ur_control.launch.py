@@ -71,6 +71,9 @@ def launch_setup(context, *args, **kwargs):
     tool_voltage = LaunchConfiguration("tool_voltage")
     reverse_ip = LaunchConfiguration("reverse_ip")
     script_command_port = LaunchConfiguration("script_command_port")
+    trajectory_port=LaunchConfiguration("trajectory_port")#"50004"
+    reverse_port=LaunchConfiguration("reverse_port")#"50001"
+    script_sender_port=LaunchConfiguration("script_sender_port")#"50002"
 
     joint_limit_params = PathJoinSubstitution(
         [FindPackageShare(description_package), "config", ur_type, "joint_limits.yaml"]
@@ -180,6 +183,15 @@ def launch_setup(context, *args, **kwargs):
             " ",
             "script_command_port:=",
             script_command_port,
+            " ",
+            "trajectory_port:=",
+            trajectory_port,
+            " ",
+            "reverse_port:=",
+            reverse_port,
+            " ",
+            "script_sender_port:=",
+            script_sender_port,
             " ",
         ]
     )
@@ -429,7 +441,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "description_file",
-            default_value="dual_ur.urdf.xacro",
+            default_value="ur.urdf.xacro",
             description="URDF/XACRO description file with the robot.",
         )
     )
@@ -574,9 +586,31 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "script_command_port",
-            default_value="50004",
+            default_value="50010",
             description="Port that will be opened to forward script commands from the driver to the robot",
         )
     )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "trajectory_port",
+            default_value="50009",
+            description="Port that will be opened to forward script commands from the driver to the robot",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "reverse_port",
+            default_value="50006",
+            description="Port that will be opened to forward script commands from the driver to the robot",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "script_sender_port",
+            default_value="50007",
+            description="Port that will be opened to forward script commands from the driver to the robot",
+        )
+    )
+
 
     return LaunchDescription(declared_arguments + [OpaqueFunction(function=launch_setup)])

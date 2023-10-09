@@ -17,11 +17,17 @@ def generate_launch_description():
     arm_0_controller_file = LaunchConfiguration('arm_0_controller_file') 
     arm_0_tf_prefix = LaunchConfiguration('arm_0_tf_prefix') 
     arm_0_script_command_port = LaunchConfiguration('arm_0_script_command_port')
+    arm_0_trajectory_port = LaunchConfiguration('arm_0_trajectory_port')
+    arm_0_reverse_port = LaunchConfiguration('arm_0_reverse_port')
+    arm_0_script_sender_port = LaunchConfiguration('arm_0_script_sender_port')
 
     arm_1_robot_ip = LaunchConfiguration('arm_1_robot_ip') 
     arm_1_controller_file = LaunchConfiguration('arm_1_controller_file') 
     arm_1_tf_prefix = LaunchConfiguration('arm_1_tf_prefix') 
     arm_1_script_command_port = LaunchConfiguration('arm_1_script_command_port')
+    arm_1_trajectory_port = LaunchConfiguration('arm_1_trajectory_port')
+    arm_1_reverse_port = LaunchConfiguration('arm_1_reverse_port')
+    arm_1_script_sender_port = LaunchConfiguration('arm_1_script_sender_port')
 
     # # UR specific arguments
     ur_type_arg = DeclareLaunchArgument(
@@ -50,7 +56,22 @@ def generate_launch_description():
 
     arm_0_script_command_port_arg =  DeclareLaunchArgument(
             "arm_0_script_command_port",
+            default_value="50002",
+            description="Port that will be opened to forward script commands from the driver to the robot",
+        )
+    arm_0_trajectory_port_arg = DeclareLaunchArgument(
+            "arm_0_trajectory_port",
+            default_value="50003",
+            description="Port that will be opened to forward script commands from the driver to the robot",
+        )
+    arm_0_reverse_port_arg = DeclareLaunchArgument(
+            "arm_0_reverse_port",
             default_value="50001",
+            description="Port that will be opened to forward script commands from the driver to the robot",
+        )
+    arm_0_script_sender_port_arg = DeclareLaunchArgument(
+            "arm_0_script_sender_port",
+            default_value="50005",
             description="Port that will be opened to forward script commands from the driver to the robot",
         )
 
@@ -74,9 +95,26 @@ def generate_launch_description():
     )
     arm_1_script_command_port_arg =  DeclareLaunchArgument(
             "arm_1_script_command_port",
+            default_value="50010",
+            description="Port that will be opened to forward script commands from the driver to the robot",
+    )
+
+    arm_1_trajectory_port_arg = DeclareLaunchArgument(
+            "arm_1_trajectory_port",
+            default_value="50009",
+            description="Port that will be opened to forward script commands from the driver to the robot",
+        )
+    arm_1_reverse_port_arg = DeclareLaunchArgument(
+            "arm_1_reverse_port",
             default_value="50006",
             description="Port that will be opened to forward script commands from the driver to the robot",
         )
+    arm_1_script_sender_port_arg = DeclareLaunchArgument(
+            "arm_1_script_sender_port",
+            default_value="50007",
+            description="Port that will be opened to forward script commands from the driver to the robot",
+        )
+
 
     
 
@@ -88,7 +126,11 @@ def generate_launch_description():
                           'robot_ip': arm_0_robot_ip,
                           'controllers_file': arm_0_controller_file,
                           'tf_prefix': arm_0_tf_prefix,
-                          'script_command_port': arm_0_script_command_port}.items())
+                          'script_command_port': arm_0_script_command_port,
+                          'trajectory_port': arm_0_trajectory_port,
+                          'reverse_port': arm_0_reverse_port,
+                          'script_sender_port': arm_0_script_sender_port,
+                          }.items())
     
     arm_0_with_namespace = GroupAction(
      actions=[
@@ -103,7 +145,10 @@ def generate_launch_description():
                           'robot_ip': arm_1_robot_ip,
                           'controllers_file': arm_1_controller_file,
                           'tf_prefix': arm_1_tf_prefix,
-                          'script_command_port': arm_1_script_command_port
+                          'script_command_port': arm_1_script_command_port,
+                          'trajectory_port': arm_1_trajectory_port,
+                          'reverse_port': arm_1_reverse_port,
+                          'script_sender_port': arm_1_script_sender_port,
                           }.items())
     
     arm_1_with_namespace = GroupAction(
@@ -120,10 +165,17 @@ def generate_launch_description():
         arm_0_controller_file_arg,
         arm_0_tf_prefix_arg,
         arm_0_script_command_port_arg,
+        arm_0_trajectory_port_arg,
+        arm_0_reverse_port_arg,
+        arm_0_script_sender_port_arg,
         arm_1_robot_ip_arg,
         arm_1_controller_file_arg,
         arm_1_tf_prefix_arg,
         arm_1_script_command_port_arg,
+        arm_1_trajectory_port_arg,
+        arm_1_reverse_port_arg,
+        arm_1_script_sender_port_arg,
+
         arm_0_with_namespace,
         arm_1_with_namespace
     ])
