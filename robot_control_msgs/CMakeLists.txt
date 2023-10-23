@@ -16,6 +16,7 @@ find_package(rosidl_default_generators REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Pose.msg"
   "msg/Moblie.msg"
+  "msg/Joint.msg"
   DEPENDENCIES 
 )
 

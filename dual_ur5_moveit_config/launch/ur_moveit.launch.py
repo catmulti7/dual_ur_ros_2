@@ -61,6 +61,7 @@ def launch_setup(context, *args, **kwargs):
     launch_servo = LaunchConfiguration("launch_servo")
     controllers_file = LaunchConfiguration("controllers_file")
     planning_group = LaunchConfiguration("planning_group")
+    if_use_rtde = LaunchConfiguration("if_use_rtde")
 
     joint_limit_params = PathJoinSubstitution(
         [FindPackageShare(description_package), "config", ur_type, "joint_limits.yaml"]
@@ -206,6 +207,7 @@ def launch_setup(context, *args, **kwargs):
     }
 
     planning_group_config = {"planning_group": planning_group}
+    rtde_config = {"if_use_rtde": if_use_rtde}
 
     # Start the actual move_group node/action server
     move_group_node = Node(
@@ -235,7 +237,8 @@ def launch_setup(context, *args, **kwargs):
             robot_description,
             robot_description_semantic,
             robot_description_kinematics,
-            planning_group_config
+            planning_group_config,
+            rtde_config
         ],
     )
 
@@ -404,6 +407,9 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument("launch_servo", default_value="true", description="Launch Servo?")
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument("if_use_rtde", default_value="false", description="use rtde instead of ros UR driver")
     )
     
 

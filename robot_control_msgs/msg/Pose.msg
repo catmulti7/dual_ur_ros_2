@@ -5,3 +5,5 @@ float32 qw
 float32 qx
 float32 qy
 float32 qz
+int16 mission
+int16 op_status

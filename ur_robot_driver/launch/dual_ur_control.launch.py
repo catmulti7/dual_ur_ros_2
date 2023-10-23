@@ -38,7 +38,7 @@ def generate_launch_description():
     )
     arm_0_robot_ip_arg = DeclareLaunchArgument(
             "arm_0_robot_ip",
-            default_value='192.168.56.3',
+            default_value='172.17.0.2',
             description="IP address by which the robot can be reached.",
     )
     arm_0_controller_file_arg = DeclareLaunchArgument(
@@ -78,7 +78,7 @@ def generate_launch_description():
 
     arm_1_robot_ip_arg = DeclareLaunchArgument(
             "arm_1_robot_ip",
-            default_value='192.168.56.101',
+            default_value='172.17.0.3',
             description="IP address by which the robot can be reached.",
     )
     arm_1_controller_file_arg = DeclareLaunchArgument(
@@ -176,6 +176,6 @@ def generate_launch_description():
         arm_1_reverse_port_arg,
         arm_1_script_sender_port_arg,
 
-        arm_0_with_namespace,
+        # arm_0_with_namespace,
         arm_1_with_namespace
     ])

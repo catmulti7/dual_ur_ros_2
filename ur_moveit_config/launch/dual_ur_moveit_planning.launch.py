@@ -37,6 +37,6 @@ def generate_launch_description():
 
     
     return LaunchDescription([
-        arm_0_moveit_with_namespace,
-        # arm_1_moveit_with_namespace
+        # arm_0_moveit_with_namespace,
+        arm_1_moveit_with_namespace
     ])

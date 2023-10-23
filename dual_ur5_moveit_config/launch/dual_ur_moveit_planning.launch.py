@@ -17,7 +17,8 @@ def generate_launch_description():
     arm_0_controllers_file = LaunchConfiguration('arm_0_controllers_file') 
     arm_1_controllers_file = LaunchConfiguration('arm_1_controllers_file') 
     arm_0_planning_group = LaunchConfiguration('arm_0_planning_group') 
-    arm_1_planning_group = LaunchConfiguration('arm_1_planning_group') 
+    arm_1_planning_group = LaunchConfiguration('arm_1_planning_group')
+    if_use_rtde = LaunchConfiguration('if_use_rtde') 
 
 
     arm_0_prefix_arg = DeclareLaunchArgument(
@@ -58,6 +59,11 @@ def generate_launch_description():
             default_value="arm_1",
             description="planning group",
     )
+    if_use_rtde_arg = DeclareLaunchArgument(
+            "if_use_rtde",
+            default_value="true",
+            description="",
+    )
 
 
     ur_moveit_launch_dir = get_package_share_directory('dual_ur5_moveit_config')
@@ -66,7 +72,8 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(os.path.join(ur_moveit_launch_dir, 'launch', 'ur_moveit.launch.py')),
         launch_arguments={'prefix': arm_0_prefix,
                           'controllers_file': arm_0_controllers_file,
-                          'planning_group' : arm_0_planning_group
+                          'planning_group' : arm_0_planning_group,
+                          'if_use_rtde' : if_use_rtde
                           }.items())
     
     arm_0_moveit_with_namespace = GroupAction(
@@ -80,7 +87,8 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(os.path.join(ur_moveit_launch_dir, 'launch', 'ur_moveit.launch.py')),
         launch_arguments={'prefix': arm_1_prefix,
                           'controllers_file': arm_1_controllers_file,
-                          'planning_group' : arm_1_planning_group
+                          'planning_group' : arm_1_planning_group,
+                          'if_use_rtde' : if_use_rtde
                           }.items())
     
     arm_1_moveit_with_namespace = GroupAction(
@@ -98,6 +106,7 @@ def generate_launch_description():
         arm_1_prefix_arg,
         arm_1_controllers_file_arg,
         arm_1_planning_group_arg,
-        arm_0_moveit_with_namespace,
+        if_use_rtde_arg,
+        #arm_0_moveit_with_namespace,
         arm_1_moveit_with_namespace
     ])
