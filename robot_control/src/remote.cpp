@@ -48,7 +48,7 @@ const moveit::core::JointModelGroup* joint_model_group;
 moveit_visual_tools::MoveItVisualTools* visual_tools;
 
 
-float scale = 0.002;
+float scale = 1;
 vector<float> limits;
 
 geometry_msgs::msg::PoseStamped start_pose;
@@ -80,6 +80,11 @@ void getControlValue(robot_control_msgs::msg::Pose pose_)
   q_mtx.unlock();
   cout<<"control value"<<scaled_dx<<" "<<scaled_dy<<" "<<scaled_dz<<endl;
   
+}
+
+void forwardKinematics()
+{
+
 }
 
 
@@ -132,11 +137,32 @@ void motionPlan()
       if(if_use_rtde)
       {
         plan_traj = my_plan.trajectory_.joint_trajectory;
+        traj_pub -> publish(plan_traj);
+
+        //for print trajectory
+        /*
+        vector<float> joint_pos;
+        Eigen::VectorXd jp(6);
         for(auto p:plan_traj.points)
         {
+          int i = 0;
+          for(auto joint: p.positions)
+          {
+            jp[i] = joint;
+            i++;
+          }
+          
+          
           cout<<"time from start "<<p.time_from_start.sec+p.time_from_start.nanosec*1e-9<<endl;
+          
+          current_state -> setJointGroupPositions(joint_model_group, jp);
+          vector<string> link_names = joint_model_group -> getLinkModelNames();
+          const Eigen::Isometry3d& end_effector_state = current_state->getGlobalLinkTransform(link_names.back());
+          cout<<"Translation: \n" << end_effector_state.translation()<<endl;
+
         }
-        traj_pub -> publish(plan_traj);
+        */
+        
       }
       else
         move_group_interface -> execute(my_plan);
