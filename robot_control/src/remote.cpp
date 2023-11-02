@@ -48,7 +48,7 @@ const moveit::core::JointModelGroup* joint_model_group;
 moveit_visual_tools::MoveItVisualTools* visual_tools;
 
 
-float scale = 1;
+float scale = 0.002;
 vector<float> limits;
 
 geometry_msgs::msg::PoseStamped start_pose;
@@ -69,8 +69,8 @@ void getControlValue(robot_control_msgs::msg::Pose pose_)
   dz = dz + pose_.dz * scale;
 
   //align coordinate of controller and robot here
-  scaled_dx = dx;
-  scaled_dy = dy;
+  scaled_dx = dy;
+  scaled_dy = -dx;
   scaled_dz = dz;
   
   //control only position, if you need orientation, uncomment lines below (not tested)
@@ -82,10 +82,6 @@ void getControlValue(robot_control_msgs::msg::Pose pose_)
   
 }
 
-void forwardKinematics()
-{
-
-}
 
 
 void motionPlan()
@@ -103,8 +99,11 @@ void motionPlan()
     //get target pose
     geometry_msgs::msg::Pose target_pose;
     auto target_pose_now = move_group_interface -> getCurrentPose();
+    
     target_pose = target_pose_now.pose;
     q_mtx.lock();
+
+    cout<<"current pose is"<<target_pose.position.x<<" "<<target_pose.position.y<<" "<<target_pose.position.z<<endl;
     target_pose.position.x += scaled_dx;
     target_pose.position.y += scaled_dy;
     target_pose.position.z += scaled_dz;
@@ -190,7 +189,7 @@ int main(int argc, char** argv)
 
   //subscribe pose infomation
   rclcpp::Subscription<robot_control_msgs::msg::Pose>::SharedPtr pose_sub;
-  pose_sub = node -> create_subscription<robot_control_msgs::msg::Pose>("pose",10,&getControlValue);
+  pose_sub = node -> create_subscription<robot_control_msgs::msg::Pose>("control_command", 10, &getControlValue);
 
   traj_pub = node -> create_publisher<trajectory_msgs::msg::JointTrajectory>("joint_trajectory", 1);
   node -> get_parameter("planning_group",planning_group);

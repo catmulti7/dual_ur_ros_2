@@ -225,7 +225,8 @@ void read_session(socket_ptr sock)
             cout<<"crc1"<<(int)crc1<<endl;
             cout<<"crc2"<<(int)crc2<<endl;
 
-            d_pose = current_pose - last_pose;
+            //d_pose = current_pose - last_pose;
+            d_pose = current_pose;
             last_pose = current_pose;
             cout<<"================1 frame===================="<<endl;
             print_data(current_pose);
@@ -266,7 +267,7 @@ void read_session(socket_ptr sock)
 
             //check crc
             uint16_t crc = receiveCRC16<joint_info>(buf.data());
-            uint8_t crc1 = crc>>8;
+            uint8_t crc1 = crc >> 8;
             uint8_t crc2 = crc;
             cout<<hex;
             cout<<"crc1"<<(int)crc1<<endl;
@@ -376,7 +377,7 @@ int main(int argc, char** argv)
     {
         socket_ptr sock(new ip::tcp::socket(service));
         acceptor.accept(*sock);
-        tmp_thread =new thread(std::bind(read_session,sock));
+        tmp_thread = new thread(std::bind(read_session, sock));
         cout<<"connection estabished"<<endl;
         tcp_threads.push_back(std::move(*tmp_thread));
         

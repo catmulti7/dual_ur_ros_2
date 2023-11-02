@@ -14,7 +14,7 @@ ament_auto_find_build_dependencies()
 
 ament_auto_add_executable(${PROJECT_NAME} 
   #DIRECTORY src
-  src/keyboard_dual.cpp
+  src/tcp.cpp
 )
 
 if(BUILD_TESTING)

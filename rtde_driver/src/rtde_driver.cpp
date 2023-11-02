@@ -240,6 +240,12 @@ void RTDEDriver::receiveCallback()
     position = rtde_receive -> getActualQ();
     velocity = rtde_receive -> getActualQd();
     effort = rtde_receive -> getTargetCurrent();
+
+    for(auto v:velocity)
+    {
+        if(fabs(v) > 3)
+            rtde_control -> triggerProtectiveStop();
+    }
     // swap_idx(position);
     // swap_idx(velocity);
     // swap_idx(effort);
