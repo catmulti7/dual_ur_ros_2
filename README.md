@@ -12,7 +12,7 @@ ros2 run receive_command receive_command
 
 Currently, this repo contains two implementations for the robot driver: based on [Universal_Robots_ROS2_Driver](https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver) or [ur_rtde](https://sdurobotics.gitlab.io/ur_rtde/).
 
-*Recommendation*: Use Universal_Robots_ROS2_Driver.
+### *Recommend*: Based on Universal_Robots_ROS2_Driver
 
 1. Configure the IP and ports in `ur_robot_driver/launch/dual_ur_control.launch.py`.
 2. Ensure that the `script_command_port` matches the port configured in the External Control program on the robot, and make sure the other ports do not conflict.
@@ -23,7 +23,7 @@ ros2 launch ur_robot_driver dual_ur_control.launch.py
 ```
 ### Based on ur_rtde
 
-It is recommended to use the ur_rtde method only in simulation environments. Compared to the Universal_Robots_ROS2_Driver method, the ur_rtde method lacks safety protections, which may pose personal risks or cause robot damage. If you want to use it with a real robot, make sure you fully understand this repository, ur_rtde, and take the risk on your own.
+It is recommended to use the ur_rtde method **only in simulation environments**. Compared to the Universal_Robots_ROS2_Driver method, the ur_rtde method **lacks safety protections**, which may leads to personal risks or robot damage. If you want to use it with a real robot, make sure you fully understand this repository, ur_rtde, and **take the risk on your own**.
 
 1. Configure the robot IP in `dual_ur5_rtde.launch.py`, and set the `if_use_rtde` variable to `true` in `robot_control/src/remote.cpp`.
 2. Run:
@@ -43,7 +43,7 @@ The `remote.cpp` file only creates one `move_group_interface` to control a singl
 ## Human-Machine Interaction
 
 In the `receive_command` package, a keyboard reading program is written to control the robotic arms. Use W/A/S/D/Q/E and I/J/K/L/U/O to control the two robotic arms respectively.  
-Run following command
+Run following command:
 ```
 ros2 run receive_command receive_command
 ```
