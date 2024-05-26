@@ -37,8 +37,8 @@ def generate_launch_description():
     )
     
     
+    
     return LaunchDescription([
-        # keyboard,
-        arm_0_with_namespace
-        # arm_1
+        arm_0_with_namespace,
+        arm_1
     ])

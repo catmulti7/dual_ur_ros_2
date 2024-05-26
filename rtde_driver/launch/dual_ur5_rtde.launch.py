@@ -31,7 +31,6 @@ def generate_launch_description():
     
     
     return LaunchDescription([
-        # keyboard,
         # arm_0,
         arm_1
     ])
