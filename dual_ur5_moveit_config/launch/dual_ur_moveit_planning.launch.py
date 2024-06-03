@@ -107,6 +107,8 @@ def generate_launch_description():
         arm_1_controllers_file_arg,
         arm_1_planning_group_arg,
         if_use_rtde_arg,
-        #arm_0_moveit_with_namespace,
+
+        # arm control node
+        arm_0_moveit_with_namespace,
         arm_1_moveit_with_namespace
     ])

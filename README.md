@@ -48,3 +48,9 @@ Run following command:
 ros2 run receive_command receive_command
 ```
 This node caputure input from your keyboard. In this terminal you can use W/A/S/D/Q/E and I/J/K/L/U/O to control the robot
+
+## Speed Control
+
+Current control method with MoveIt and Universal_Robots_ROS2_Driver is position control. The postion control interface provided by MoveIt is sequential, which means when users call ``MoveGroupInterface::move`` or ``MoveGroupInterface::execute``, program will block until robot reaches the given position. When control command is given during the robot is moving, the robot will come to a stop, and than start to move to the second desire pose. Since we want robot move smoothly in most cases, these pauses should be removed.
+
+Speed control is used to slove this problem by using the ``speedJ`` function provided by ur_rtde. To use speed control, use the robot driver based on ur_rtde, as described in the [Based on ur_rtde](https://github.com/catmulti7/dual_ur_ros_2?tab=readme-ov-file#based-on-ur_rtde) section.

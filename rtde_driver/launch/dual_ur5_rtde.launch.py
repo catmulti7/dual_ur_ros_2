@@ -11,7 +11,7 @@ def generate_launch_description():
             output='screen',
             parameters=[
             {
-                "ip_address": '192.168.71.51',
+                "ip_address": '172.17.0.2',
                 "robot_name": 'arm_0'
                 
             }]
@@ -23,7 +23,7 @@ def generate_launch_description():
             output='screen',
             parameters=[
             {
-                "ip_address": '192.168.71.52',
+                "ip_address": '172.17.0.3',
                 "robot_name": 'arm_1'
             }]
         )
@@ -31,6 +31,6 @@ def generate_launch_description():
     
     
     return LaunchDescription([
-        # arm_0,
+        arm_0,
         arm_1
     ])

@@ -12,6 +12,7 @@
 #include <boost/lockfree/queue.hpp>
 #include <queue>
 #include <algorithm>
+#include <fstream>
 
 //sensor_msgs/msg/JointState
 
@@ -25,7 +26,7 @@ using namespace ur_rtde;
 using namespace std::chrono;
 using std::cout, std::endl;
 using std::placeholders::_1;
-using std::vector, std::queue, std::string;
+using std::vector, std::queue, std::string, std::fstream;
 
 
 sensor_msgs::msg::JointState joint_state;
@@ -47,60 +48,8 @@ public:
     }
 };
 
-class ImpedanceControl
-{
-public:
-    int joint_num = 6;
-    vector<double> torque_raw, torque_filted, torque_last;
-    vector<float> f_torque;
-    
 
-    //filter param
-    float noise_threshold = 0.1;
 
-    void getJointTorque(RTDEControlInterface& rtde_control);
-    void filter();
-    void convertToFloat(vector<double>& vec);
-
-    ImpedanceControl()
-    {
-        torque_filted = vector<double>(6);
-        torque_last = vector<double>(6);
-    }
-
-};
-
-void ImpedanceControl::getJointTorque(RTDEControlInterface& rtde_control)
-{
-    torque_raw = rtde_control.getJointTorques();
-    filter();
-}
-
-void ImpedanceControl::filter()
-{
-    for(int i = 0; i < joint_num; i++)
-    {
-        if(fabs(torque_raw[i]) < noise_threshold)
-        {
-            torque_filted[i] = 0;
-        }
-        else
-        {
-            torque_filted[i] = (torque_raw[i] + torque_last[i])/2;
-        }
-    }
-    torque_last = torque_filted;
-}
-
-void ImpedanceControl::convertToFloat(vector<double>& vec)
-{
-    f_torque.clear();
-    for(auto& v: vec)
-    {
-        f_torque.push_back(float(v));
-    }
-
-}
 
 class RTDEDriver : public rclcpp::Node
 {
@@ -117,26 +66,27 @@ public:
     
 
     std::thread* control_thread;
-    vector<vector<double>> mid_traj;
-    vector<vector<double>> trajectory;
-    sharedObj<queue<vector<double>>> trajectory_share;
-    queue<vector<double>> traj;
-    std_msgs::msg::Float32MultiArray torque_msg;
+    sharedObj<vector<double>> d_j_share;
+
+
+    std::chrono::time_point<steady_clock> start_time;
+
 
     double vel = 0.1;
-    double acc = 0.1;
-    double rtde_frequency = 5.0; // Hz
+    double acc = 0.5; //1
+    double rtde_frequency = 500; // Hz
     double dt = 1.0 / rtde_frequency; // 2ms
-    double lookahead_time = 0.2;
-    double gain = 100;
     float step_threshold = 0.05;
 
+    std::atomic<bool> new_pos, ready, pgm_end;
 
-    std::atomic<bool> new_traj;
-    std::atomic<bool> pgm_end;
-    std::mutex traj_lock;
+    vector<double> d_j_position, d_speed, pos_err, last_pos_err, dif_pos_err, r_ik;
+    double kp = 1; //3
+    double kd = 0.2; //1
+    std::mutex j_pos_lock;
     
     vector<double> position, velocity, effort, torque;
+    vector<double> r_position, r_velocity, r_effort;
 
     vector<string> name = {"shoulder_pan_joint",
                             "shoulder_lift_joint", 
@@ -151,15 +101,22 @@ public:
 
     RTDEDriver() : Node("rtde_driver")
     {
-        new_traj = false;
         this -> declare_parameter<string>("ip_address");
         this -> declare_parameter<string>("robot_name");
         this -> get_parameter("ip_address", robot_ip);
         this -> get_parameter("robot_name", robot_name);
 
+        cout << robot_ip << endl;
+
+        d_j_position = vector<double>(6);
+        d_speed = vector<double>(6);
+        dif_pos_err = vector<double>(6);
+        pos_err = vector<double>(6);
+
+
         for(auto joint: name)
         {
-            name_with_prefix.push_back(robot_name+"_"+joint);
+            name_with_prefix.push_back(robot_name + "_" + joint);
         }
        
 
@@ -175,8 +132,15 @@ public:
         // control_thread = new std::thread(&RTDEDriver::controlArm, this);
 
         timer_ = this->create_wall_timer(
-                    5ms, std::bind(&RTDEDriver::receiveCallback, this));
+                    2ms, std::bind(&RTDEDriver::controlArm, this));
 
+        start_time = std::chrono::steady_clock::now();
+
+    }
+
+    ~RTDEDriver()
+    {
+        pgm_end = true;
     }
 
     void controlArm();
@@ -193,7 +157,7 @@ public:
 float RTDEDriver::calc_distance(vector<double>& p_a, vector<double>& p_b)
 {
     float distance = 0;
-    for(int i = 0; i < p_a.size(); i++)
+    for(unsigned int i = 0; i < p_a.size(); i++)
     {
         distance += (p_a[i] - p_b[i]) * (p_a[i] - p_b[i]);
     }
@@ -230,7 +194,6 @@ void RTDEDriver::verify(vector<double>& current_p, vector<double>& desire_p)
     if(calc_distance(current_p, desire_p) > step_threshold)
     {
         rtde_control -> triggerProtectiveStop();
-        pgm_end = true;
 
     }
 }
@@ -238,94 +201,92 @@ void RTDEDriver::verify(vector<double>& current_p, vector<double>& desire_p)
 
 void RTDEDriver::controlArm()
 {
-    while(!pgm_end)
+    if(pgm_end)
     {
-
-        if(new_traj)
-        {
-            trajectory_share(traj);
-            start_from_current(position, traj);
-            new_traj = false;
-        }
-        if(traj.empty())
-        {
-            //cout<<"no trajectory to excute"<<endl;
-            // std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            continue;
-        }
-        vector<double> p;
-        p = traj.front();
-        traj.pop();
-        //cout<<"controlling"<<endl;
-        steady_clock::time_point start = steady_clock::now();
-        steady_clock::time_point t_start = rtde_control -> initPeriod();
-        //verify(position, p);
-
-        rtde_control -> servoJ(p, vel, acc, dt, lookahead_time, gain);
-        
-        rtde_control -> waitPeriod(t_start);
-        steady_clock::time_point end = steady_clock::now();
-        auto diff = duration_cast<milliseconds>(end - start);
-        cout<<"loop time is"<<diff.count()<<endl;
+        rtde_control -> speedStop();
+        rtde_control -> stopScript();
+        RCLCPP_WARN(this -> get_logger(), "RTDE Control Quit");
+        return;
     }
-   RCLCPP_WARN(this -> get_logger(), "RTDE Control Quit");
-}
-
-void RTDEDriver::receiveCallback()
-{
     
     position = rtde_receive -> getActualQ();
     velocity = rtde_receive -> getActualQd();
     effort = rtde_receive -> getTargetCurrent();
-
 
     for(auto v:velocity)
     {
         if(fabs(v) > 3)
             rtde_control -> triggerProtectiveStop();
     }
-    // swap_idx(position);
-    // swap_idx(velocity);
-    // swap_idx(effort);
+
+    if(new_pos)
+    {
+        d_j_share(d_j_position);
+        new_pos = false;
+    }
+
+    //speed control
+    
+    if(ready)
+    {
+        for(int i = 0; i < 6; i++)
+        {
+            pos_err[i] = d_j_position[i] - position[i];
+
+            if(!last_pos_err.empty())
+                dif_pos_err[i] = pos_err[i] - last_pos_err[i];
+            
+            d_speed[i] = kp * pos_err[i] + kd * dif_pos_err[i];
+            if(fabs(d_speed[i]) > 1)
+            {
+                RCLCPP_WARN_STREAM(this -> get_logger(), "SPEED LIMIT EXCEED AT JOINT " << i);
+                d_speed[i] = 0;
+                // rtde_control -> triggerProtectiveStop();
+            }
+        }
+        
+
+        rtde_control -> speedJ(d_speed, acc, dt);
+        last_pos_err = pos_err;
+
+    }
+    
+
     joint_state.header.stamp = this -> get_clock()-> now();
     joint_state.name = name_with_prefix;
     joint_state.position = position;
     joint_state.velocity = velocity;
-    //joint_state.effort = effort;
-    // cout<<"position :"<<endl;
-    // print_vector(position);
-    // cout<<"velocity :"<<endl;
-    // print_vector(velocity);
-    // cout<<"effort :"<<endl;
-    // print_vector(effort);
-    // joint_state.effort = effort;
-    // cout<<"position :"<<endl;
-    // print_vector(position);
-    // cout<<"velocity :"<<endl;
-    // print_vector(velocity);
-    // cout<<"effort :"<<endl;
-    // print_vector(effort);
+
     joint_status_pub -> publish(joint_state);
+
+    
+}
+
+// NOT USED
+void RTDEDriver::receiveCallback()
+{
+    r_position = rtde_receive -> getActualQ();
+    r_velocity = rtde_receive -> getActualQd();
+    r_effort = rtde_receive -> getTargetCurrent();
+
+
+
+    joint_state.header.stamp = this -> get_clock()-> now();
+    joint_state.name = name_with_prefix;
+    joint_state.position = r_position;
+    joint_state.velocity = r_velocity;
+
+    joint_status_pub -> publish(joint_state);
+    
+   
 }
 
 void RTDEDriver::IKResCallback(const std_msgs::msg::Float64MultiArray& ik_res)
 {
-    impc.getJointTorque(*rtde_control);
-    impc.convertToFloat(impc.torque_raw);
-    torque_msg.data = impc.f_torque;
-    joint_torque_pub -> publish(torque_msg);
-
-    vector<double> joints = ik_res.data;
-    
-    //steady_clock::time_point start = steady_clock::now();
-
-    rtde_control -> moveJ(joints, 1.05, 1.4, true);
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
-    cout<<"receive one"<<endl;
-
-    steady_clock::time_point end = steady_clock::now();
-    //auto diff = duration_cast<milliseconds>(end - start);
-    //cout<<"loop time is"<<diff.count()<<endl;
+    r_ik = ik_res.data;
+    d_j_share(r_ik);
+    new_pos = true;
+    ready = true;
 
 }
 

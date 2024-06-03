@@ -17,6 +17,7 @@
 
 #include "robot_control_msgs/msg/pose.hpp"
 #include "std_msgs/msg/int16.hpp"
+#include "std_msgs/msg/float64_multi_array.hpp"
 
 
 using namespace std;
@@ -55,8 +56,8 @@ geometry_msgs::msg::PoseStamped start_pose;
 vector<vector<geometry_msgs::msg::Pose>> trajectories;
 thread* plan = nullptr;
 
-rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr traj_pub;
-trajectory_msgs::msg::JointTrajectory plan_traj;
+rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr ik_pub;
+std_msgs::msg::Float64MultiArray ik_solution;
 
 bool if_use_rtde;
 
@@ -135,8 +136,8 @@ void motionPlan()
     {
       if(if_use_rtde)
       {
-        plan_traj = my_plan.trajectory_.joint_trajectory;
-        traj_pub -> publish(plan_traj);
+        ik_solution.data = solution;
+        ik_pub -> publish(ik_solution);
 
         //for print trajectory
         /*
@@ -179,9 +180,7 @@ void motionPlan()
 
 
 int main(int argc, char** argv)
-{
-  cout<<"-----------------------------started---------------------"<<endl;
-  
+{ 
   rclcpp::init(argc, argv);
   rclcpp::NodeOptions node_options;
   node_options.automatically_declare_parameters_from_overrides(true);
@@ -191,7 +190,10 @@ int main(int argc, char** argv)
   rclcpp::Subscription<robot_control_msgs::msg::Pose>::SharedPtr pose_sub;
   pose_sub = node -> create_subscription<robot_control_msgs::msg::Pose>("control_command", 10, &getControlValue);
 
-  traj_pub = node -> create_publisher<trajectory_msgs::msg::JointTrajectory>("joint_trajectory", 1);
+
+  ik_pub = node -> create_publisher<std_msgs::msg::Float64MultiArray>("ik_results", 1);
+
+
   node -> get_parameter("planning_group",planning_group);
   node -> get_parameter("if_use_rtde",if_use_rtde);
   cout<<"--------if use rtde "<<if_use_rtde<<endl;
