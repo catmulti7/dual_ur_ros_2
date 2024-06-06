@@ -61,7 +61,7 @@ def generate_launch_description():
     )
     if_use_rtde_arg = DeclareLaunchArgument(
             "if_use_rtde",
-            default_value="true",
+            default_value="false",
             description="",
     )
 
@@ -109,6 +109,6 @@ def generate_launch_description():
         if_use_rtde_arg,
 
         # arm control node
-        arm_0_moveit_with_namespace,
+        # arm_0_moveit_with_namespace,
         arm_1_moveit_with_namespace
     ])
