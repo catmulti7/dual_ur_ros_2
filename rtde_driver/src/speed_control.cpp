@@ -118,7 +118,8 @@ public:
         {
             name_with_prefix.push_back(robot_name + "_" + joint);
         }
-       
+
+        rclcpp::on_shutdown(std::bind(&RTDEDriver::closeConnect, this));
 
         rtde_control = std::make_unique<RTDEControlInterface>(robot_ip, rtde_frequency);
         rtde_receive = std::make_unique<RTDEReceiveInterface>(robot_ip, 200);
@@ -151,8 +152,18 @@ public:
     float calc_distance(vector<double>& p_a, vector<double>& p_b);
     void start_from_current(vector<double>& current_p, queue<vector<double>>& trajectory);
     void verify(vector<double>& current_p, vector<double>& desire_p);
+    void closeConnect();
     
 };
+
+void RTDEDriver::closeConnect()
+{
+    rtde_control -> speedStop();
+    rtde_control -> stopScript();
+    cout << "RTDE Control Quit" << endl;
+    // RCLCPP_WARN(this -> get_logger(), "RTDE Control Quit");
+    return;
+}
 
 float RTDEDriver::calc_distance(vector<double>& p_a, vector<double>& p_b)
 {
@@ -240,8 +251,7 @@ void RTDEDriver::controlArm()
             if(fabs(d_speed[i]) > 1)
             {
                 RCLCPP_WARN_STREAM(this -> get_logger(), "SPEED LIMIT EXCEED AT JOINT " << i);
-                d_speed[i] = 0;
-                // rtde_control -> triggerProtectiveStop();
+                d_speed[i] = d_speed[i] > 0 ? 0.5 : -0.5;
             }
         }
         
