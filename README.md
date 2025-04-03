@@ -23,7 +23,7 @@ ros2 launch ur_robot_driver dual_ur_control.launch.py
 ```
 ### Based on ur_rtde
 
-It is recommended to use the ur_rtde method **only in simulation environments**. Compared to the Universal_Robots_ROS2_Driver method, the ur_rtde method **lacks safety protections**, which may leads to personal risks or robot damage. If you want to use it with a real robot, make sure you fully understand this repository, ur_rtde, and **take the risk on your own**.
+Compared to the Universal_Robots_ROS2_Driver method, the ur_rtde method may **lacks safety protections**, which may leads to personal risks or robot damage. If you want to use it with a real robot, make sure you fully understand this repository, ur_rtde, and **take the risk on your own**.
 
 1. Configure the robot IP in `dual_ur5_rtde.launch.py`, and set the `if_use_rtde` variable to `true` in `robot_control/src/remote.cpp`.
 2. Run:
